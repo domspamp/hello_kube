@@ -1,8 +1,8 @@
 pipeline {
     agent none 
     environment {
-        registry = "domspamp/go_server"
-        docker_user = "domspamp"
+        registry = "linhbngo/go_server"
+        docker_user = "linhbngo"
         docker_app = "go_server"
         GOCACHE = "/tmp"
     }
@@ -10,7 +10,7 @@ pipeline {
         stage('Build') {
             agent {
                 kubernetes {
-                    inheritFrom 'agent-template'
+                    inheritFrom 'golang'
                 }
             }
             steps {
@@ -28,7 +28,7 @@ pipeline {
         stage('Test') {
             agent {
                 kubernetes {
-                    inheritFrom 'agent-template'
+                    inheritFrom 'golang'
                 }
             }
             steps {
@@ -48,14 +48,16 @@ pipeline {
         stage('Publish') {
             agent {
                 kubernetes {
-                    inheritFrom 'agent-template'
+                    inheritFrom 'docker'
                 }
             }
             steps{
                 container('docker') {
-                    sh 'echo $DOCKER_TOKEN | docker login --username $DOCKER_USER --password-stdin'
-                    sh 'docker build -t $DOCKER_REGISTRY:$BUILD_NUMBER .'
-                    sh 'docker push $DOCKER_REGISTRY:$BUILD_NUMBER'
+                //    sh 'echo $DOCKER_TOKEN | docker login --username $DOCKER_USER --password-stdin'
+                //    sh 'docker build -t $DOCKER_REGISTRY:$BUILD_NUMBER .'
+                //    sh 'docker push $DOCKER_REGISTRY:$BUILD_NUMBER'
+                    sh 'docker build -t 130.127.132.210:31000/go_app:$BUILD_NUMBER .'
+                    sh 'docker push 130.127.132.210:31000/go_app:$BUILD_NUMBER'
                 }
             }
         }
@@ -70,9 +72,9 @@ pipeline {
                     sh "sed -i 's/DOCKER_USER/${docker_user}/g' deployment.yml"
                     sh "sed -i 's/DOCKER_APP/${docker_app}/g' deployment.yml"
                     sh "sed -i 's/BUILD_NUMBER/${BUILD_NUMBER}/g' deployment.yml"
-                    sh 'scp -r -v -o StrictHostKeyChecking=no *.yml DS946528@155.98.37.80:~/'
-                    sh 'ssh -o StrictHostKeyChecking=no DS946528@155.98.37.80 kubectl apply -f /users/lngo/deployment.yml -n jenkins'
-                    sh 'ssh -o StrictHostKeyChecking=no DS946528@155.98.37.80 kubectl apply -f /users/lngo/service.yml -n jenkins'                                        
+                    sh 'scp -r -v -o StrictHostKeyChecking=no *.yml lngo@155.98.37.91:~/'
+                    sh 'ssh -o StrictHostKeyChecking=no lngo@155.98.37.91 kubectl apply -f /users/lngo/deployment.yml -n jenkins'
+                    sh 'ssh -o StrictHostKeyChecking=no lngo@155.98.37.91 kubectl apply -f /users/lngo/service.yml -n jenkins'                                        
                 }
             }
         }
